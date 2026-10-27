@@ -12,7 +12,7 @@ The cover collection is a snapshot, not a regularly refreshed service. Missing c
 
 Releases contain one trainer pack for this collection, one for the upstream [HEN Cheats Collection](https://github.com/TeeKay87/HEN-Cheats-Collection), sixteen stable cover packs, a catalogue and a manifest. Empty cover packs are omitted. Trainer payloads remain byte-identical. Exact duplicate trainer bytes merge only when the filename-derived title ID and version also match. The original source files remain in this repository.
 
-Covers in release packs are limited to 300 pixels on their longest edge. Larger images are resized for library browsing; source artwork is retained unchanged. Entries are accessed individually, so applications do not need to extract every file or decode every image at startup.
+Covers in release packs are limited to 300 pixels on their longest edge. Larger images are resized for library browsing. Opaque covers use optimized JPEG at quality 88; images with actual transparency retain PNG. Source artwork is retained unchanged. Entries are accessed individually, so applications do not need to extract every file or decode every image at startup.
 
 The manifest records source commits and each asset's SHA256 and length. The catalogue maps logical filenames to pack entries. Pack and catalogue assets have immutable SHA256 filenames. The release tag identifies catalogue content, so a compression-only toolchain difference does not create another release. Identical content can retain an earlier valid source commit in its published provenance.
 

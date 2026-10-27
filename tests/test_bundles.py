@@ -106,6 +106,42 @@ class BundleTests(unittest.TestCase):
         with self.assertRaises(OSError):
             thumbnail(source)
 
+    def test_opaque_png_and_jpeg_encode_jpeg88_without_editing_sources(self):
+        for name, mode in [('CUSA12345.png', 'RGBA'), ('PPSA54321.jpg', 'RGB')]:
+            with self.subTest(name=name):
+                source = self.root / name
+                color = (10, 20, 30, 255) if mode == 'RGBA' else (10, 20, 30)
+                Image.new(mode, (256, 200), color).save(source)
+                original = source.read_bytes()
+                data, extension = thumbnail(source)
+                self.assertEqual('.jpg', extension)
+                self.assertEqual(original, source.read_bytes())
+                target = self.root / 'result.jpg'
+                target.write_bytes(data)
+                with Image.open(target) as image:
+                    self.assertEqual('JPEG', image.format)
+                    self.assertEqual((256, 200), image.size)
+                _, catalogue, _ = self.fixture(covers=[source])
+                row = next(row for row in catalogue['entries'] if row['kind'] == 'cover')
+                self.assertEqual(source.stem + '.jpg', row['entry'])
+                self.assertEqual(row['entry'], row['path'])
+
+    def test_transparent_palette_png_keeps_alpha_and_extension(self):
+        source = self.root / 'CUSA12345.png'
+        image = Image.new('P', (16, 16), 1)
+        image.putpalette([0, 0, 0, 255, 0, 0] + [0, 0, 0] * 254)
+        image.putpixel((0, 0), 0)
+        image.save(source, transparency=0)
+        original = source.read_bytes()
+        data, extension = thumbnail(source)
+        self.assertEqual('.png', extension)
+        target = self.root / 'transparent.png'
+        target.write_bytes(data)
+        with Image.open(target) as decoded:
+            self.assertEqual(0, decoded.convert('RGBA').getpixel((0, 0))[3])
+            self.assertEqual(255, decoded.convert('RGBA').getpixel((1, 1))[3])
+        self.assertEqual(original, source.read_bytes())
+
     def test_asset_corruption_is_rejected_before_publication(self):
         manifest = self.fixture()[0]
         checked_assets(self.output)

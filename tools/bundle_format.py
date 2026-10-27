@@ -72,17 +72,16 @@ def thumbnail(path):
         source.load()
         if source.format not in ('JPEG', 'PNG') or source.width * source.height > 16_000_000:
             raise ValueError('Unsupported cover format or dimensions: ' + path.name)
-        target_format = source.format
-        extension = '.jpg' if target_format == 'JPEG' else '.png'
-        if max(source.size) <= 300 and not source.getexif():
-            return data, extension
         image = ImageOps.exif_transpose(source)
+        transparent = image.convert('RGBA').getchannel('A').getextrema()[0] < 255
         image.thumbnail((300, 300), Image.Resampling.LANCZOS)
         output = io.BytesIO()
-        if target_format == 'JPEG':
-            image.convert('RGB').save(output, 'JPEG', quality=90, optimize=True)
-        else:
+        if transparent:
             image.save(output, 'PNG', optimize=True, compress_level=9)
+            extension = '.png'
+        else:
+            image.convert('RGB').save(output, 'JPEG', quality=88, optimize=True)
+            extension = '.jpg'
         return output.getvalue(), extension
 
 
