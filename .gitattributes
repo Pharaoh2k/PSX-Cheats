@@ -1,0 +1,4 @@
+* text=auto
+ShnExt/** -text
+Covers/** -text
+*.zip -text
