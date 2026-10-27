@@ -12,7 +12,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'tools'))
 from bundle_format import build, filename_metadata, safe_path, sha256, thumbnail, zip_bytes
 from build_bundles import load_hen
-from publish_bundles import checked_assets, main as publish
+from publish_bundles import checked_assets, verify_repository, main as publish
 
 
 class BundleTests(unittest.TestCase):
@@ -173,6 +173,39 @@ class BundleTests(unittest.TestCase):
         (folder / 'tree.json').write_text(json.dumps(tree))
         with self.assertRaisesRegex(ValueError, 'Git blob hash'):
             load_hen(folder)
+
+    def test_publication_rejects_wrong_repository_identity(self):
+        with self.assertRaisesRegex(ValueError, 'identity'):
+            verify_repository({'full_name': 'another/repository', 'permissions': {'push': True}})
+
+    def test_repository_permission_metadata_does_not_replace_write_authorization(self):
+        verify_repository({'full_name': 'Pharaoh2k/PSX-Cheats', 'permissions': {'push': False}})
+
+    def test_publication_accepts_omitted_token_permissions(self):
+        for fields in ({}, {'permissions': None}, {'permissions': {}}):
+            with self.subTest(fields=fields):
+                verify_repository(dict(full_name='Pharaoh2k/PSX-Cheats', **fields))
+
+    def test_publication_accepts_confirmed_push_access(self):
+        verify_repository({'full_name': 'Pharaoh2k/PSX-Cheats', 'permissions': {'push': True}})
+
+    def test_server_denied_draft_creation_stops_publication(self):
+        self.fixture()
+        calls = []
+        def command(args, **kwargs):
+            words = args[1:]
+            calls.append(words)
+            if words[:1] == ['api']:
+                return subprocess.CompletedProcess(args, 0, json.dumps({'full_name': 'Pharaoh2k/PSX-Cheats', 'permissions': {'push': False}}), '')
+            if words[:2] == ['release', 'view']:
+                return subprocess.CompletedProcess(args, 1, '', 'release not found')
+            if words[:2] == ['release', 'create']:
+                return subprocess.CompletedProcess(args, 1, '', 'HTTP 403: Resource not accessible by integration')
+            self.fail('Unexpected action after rejected draft creation')
+        with patch('publish_bundles.subprocess.run', side_effect=command), patch.object(sys, 'argv', ['publish', '--output', str(self.output)]):
+            with self.assertRaisesRegex(RuntimeError, 'HTTP 403'):
+                publish()
+        self.assertEqual(['api', 'release', 'release'], [call[0] for call in calls])
 
     def test_publication_is_draft_first_and_commit_last(self):
         manifest, _, _ = self.fixture()

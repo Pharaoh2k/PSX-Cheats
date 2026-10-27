@@ -37,6 +37,11 @@ def checked_assets(folder):
     return manifest, [folder / asset['file'] for asset in assets] + [folder / 'build-report.json', folder / 'manifest.json']
 
 
+def verify_repository(remote):
+    if remote.get('full_name') != REPOSITORY:
+        raise ValueError('Repository identity does not match')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=Path(__file__).resolve().parents[1] / 'dist')
@@ -54,9 +59,8 @@ def main():
             raise RuntimeError(result.stderr.strip())
         return result.stdout
 
-    remote = json.loads(gh('api', 'repos/' + REPOSITORY, '--jq', '{full_name,permissions}'))
-    if remote['full_name'] != REPOSITORY or not remote.get('permissions', {}).get('push'):
-        raise ValueError('Repository identity or write access does not match')
+    remote = json.loads(gh('api', 'repos/' + REPOSITORY, '--jq', '{full_name}'))
+    verify_repository(remote)
     existing = gh('release', 'view', tag, '--repo', REPOSITORY, '--json', 'isDraft,assets', allow_missing=True)
     with tempfile.TemporaryDirectory() as temporary:
         temporary = Path(temporary)
