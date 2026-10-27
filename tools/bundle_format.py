@@ -10,7 +10,8 @@ from PIL import Image, ImageOps
 SCHEMA = 1
 MAX_PACK_BYTES = 64 * 1024 * 1024
 MAX_TRAINER_BYTES = 32 * 1024 * 1024
-TITLE_ID = re.compile(r'^(?:CUSA|PPSA)\d{5}$', re.IGNORECASE)
+TITLE_ID = re.compile(r'^[A-Z]{4}[0-9]{5}$', re.IGNORECASE)
+COVER_TITLE_ID = re.compile(r'^(?:CUSA|PPSA)[0-9]{5}$', re.IGNORECASE)
 LOADABLE = {'.shnext', '.json', '.shn', '.mc4', '.tlh'}
 
 
@@ -57,8 +58,8 @@ def trainer_metadata(source_id, path, data, overrides):
     override = overrides.get(source_id + '/' + path)
     if override and override.get('sha256') == sha256(data):
         for name in result:
-            if isinstance(override.get(name), str):
-                result[name] = override[name]
+            if isinstance(override.get(name), str) and override[name].strip():
+                result[name] = override[name].strip()
     result['titleId'] = result['titleId'].upper()
     if result['titleId'] and not TITLE_ID.fullmatch(result['titleId']):
         raise ValueError('Invalid trainer title ID: ' + path)
@@ -153,7 +154,7 @@ def build(output, trainers, covers, sources, overrides=None):
     cover_titles = set()
     for path in sorted(covers, key=lambda item: (item.stem.upper(), {'.jpg': 0, '.jpeg': 1, '.png': 2}.get(item.suffix.lower(), 3))):
         title = path.stem.upper()
-        if not TITLE_ID.fullmatch(title):
+        if not COVER_TITLE_ID.fullmatch(title):
             raise ValueError('Cover filename must be a title ID: ' + path.name)
         if title in cover_titles:
             raise ValueError('Multiple cover files for title ID: ' + title)

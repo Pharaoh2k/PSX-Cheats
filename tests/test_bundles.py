@@ -68,6 +68,18 @@ class BundleTests(unittest.TestCase):
         override['shnext/' + self.name]['sha256'] = '0' * 64
         self.assertEqual('Example', self.fixture(overrides=override)[1]['entries'][0]['game'])
 
+    def test_legacy_sony_ids_and_blank_header_fallback(self):
+        name = 'json/SCES01762_01.00_956074d6.json'
+        data = b'{"id":"SCES01762","name":"Classic game","version":"01.00"}'
+        row = self.fixture({'hen': {name: data}})[1]['entries'][0]
+        self.assertEqual('SCES01762', row['titleId'])
+        self.assertEqual('01.00', row['version'])
+        override = {'shnext/' + self.name: {'sha256': sha256(self.data), 'titleId': ' ', 'game': '', 'version': '  '}}
+        row = self.fixture(overrides=override)[1]['entries'][0]
+        self.assertEqual('CUSA12345', row['titleId'])
+        self.assertEqual('Example', row['game'])
+        self.assertEqual('01.00', row['version'])
+
     def test_unsupported_payload_exclusion_is_hash_bound_and_reported(self):
         override = {'shnext/' + self.name: {'sha256': sha256(self.data), 'supported': False, 'reason': 'Known unsupported format'}}
         manifest, catalogue, report = self.fixture(overrides=override)
