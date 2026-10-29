@@ -3,10 +3,12 @@
 Trainer files and a shared PlayStation cover snapshot for Phoenix Trainers.
 
 - `ShnExt` contains the original ShnExt trainer files. File contents are preserved.
-- `Covers` contains JPEG and PNG artwork named by title ID, including titles from this collection and HEN Cheats Collection.
+- `Covers` contains JPEG and PNG artwork named by title ID, including titles from this collection and HEN Cheats Collection. Accepted prefixes are CUSA, PPSA, SLUS, SLES, SLPM, SCUS, SLPS and SCES; filenames omit the serial's hyphen.
 - `metadata.json`, when present, supplies verified presentation headers keyed by source and relative filename. Each record is tied to the trainer's SHA256.
 
-The cover collection is a snapshot, not a regularly refreshed service. Missing covers must remain eligible for the application's Sony cover lookup. Some supplied trainer title IDs have no exact matching cover filename, so a repository miss must never disable that fallback.
+The cover collection is a snapshot, not a regularly refreshed service. Missing covers must remain eligible for the application's cover lookup: Sony for PS4/PS5, and serial-based collections for PS1/PS2. Some supplied trainer title IDs have no exact matching cover filename, so a repository miss must never disable those fallbacks. Artwork aliases keep the original trainer ID as the filename; they do not change trainer identity or establish console compatibility.
+
+The October 29, 2026 snapshot adds 131 PS1/PS2 covers and three verified Sony concept covers for PPSA16387, PPSA16388 and PPSA28601, bringing the collection to 2,039 images. Legacy artwork comes from [xlenore's PS1 covers](https://github.com/xlenore/psx-covers), [PS2 covers](https://github.com/xlenore/ps2-covers) and [Libretro thumbnails](https://github.com/libretro-thumbnails). These collections retain their respective artwork credits; this repository claims no ownership of the artwork.
 
 ## Library bundles
 
@@ -39,4 +41,4 @@ Building downloads a commit-pinned upstream HEN archive and verifies each select
 
 The workflow runs after relevant pushes, on manual request, and every six hours at 01:23, 07:23, 13:23 and 19:23 Asia/Bangkok (UTC cron). Scheduled execution can be delayed by GitHub. It reads current HEN data but never fetches new Sony artwork. Unchanged catalogue content skips publication. A new release stays a draft until all required assets are uploaded, then becomes the latest published generation. An interrupted draft can resume with the same build output; existing assets are verified and never overwritten.
 
-Only data and packaging automation belong here. App source, credentials, private keys and local machine reports are not part of this repository. Trainer authors retain their credits in filenames and metadata; artwork originates from the PlayStation catalogue.
+Only data and packaging automation belong here. App source, credentials, private keys and local machine reports are not part of this repository. Trainer authors retain their credits in filenames and metadata; artwork comes from the PlayStation catalogue and the legacy cover collections linked above.

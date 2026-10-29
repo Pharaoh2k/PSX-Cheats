@@ -90,6 +90,32 @@ class BundleTests(unittest.TestCase):
         self.assertEqual(1, len(changed[1]['entries']))
         self.assertEqual([], changed[2]['excluded'])
 
+    def test_legacy_covers_are_included_under_the_original_serial(self):
+        titles = ['SLUS21016', 'SLES53887', 'SLPM86037', 'SCUS94402', 'SLPS66666', 'SCES53135']
+        covers = []
+        for title in titles:
+            path = self.root / (title + '.png')
+            Image.new('RGB', (20, 30), (10, 20, 30)).save(path)
+            covers.append(path)
+        manifest, catalogue, report = self.fixture(covers=covers)
+        self.assertEqual(len(titles), report['coverCount'])
+        rows = [row for row in catalogue['entries'] if row['kind'] == 'cover']
+        self.assertEqual(set(titles), {row['titleId'] for row in rows})
+        for row in rows:
+            self.assertEqual(row['titleId'] + '.jpg', row['path'])
+            pack = next(pack for pack in manifest['packs'] if pack['id'] == row['packId'])
+            with zipfile.ZipFile(self.output / pack['file']) as archive:
+                self.assertEqual(row['sha256'], sha256(archive.read(row['entry'])))
+        checked_assets(self.output)
+
+    def test_unknown_or_malformed_cover_serials_are_rejected(self):
+        for title in ['ABCD12345', 'SLUS1234', 'SLUS123456', 'SLUS-12345', 'CUSA12345-extra']:
+            with self.subTest(title=title):
+                path = self.root / (title + '.png')
+                Image.new('RGB', (20, 30)).save(path)
+                with self.assertRaisesRegex(ValueError, 'Cover filename must be a title ID'):
+                    self.fixture(covers=[path])
+
     def test_large_cover_is_resized_without_editing_input(self):
         source = self.root / 'CUSA12345.png'
         Image.new('RGBA', (800, 1200), (10, 20, 30, 128)).save(source)

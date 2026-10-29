@@ -11,7 +11,7 @@ SCHEMA = 1
 MAX_PACK_BYTES = 64 * 1024 * 1024
 MAX_TRAINER_BYTES = 32 * 1024 * 1024
 TITLE_ID = re.compile(r'^[A-Z]{4}[0-9]{5}$', re.IGNORECASE)
-COVER_TITLE_ID = re.compile(r'^(?:CUSA|PPSA)[0-9]{5}$', re.IGNORECASE)
+COVER_TITLE_ID = re.compile(r'^(?:CUSA|PPSA|SLUS|SLES|SLPM|SCUS|SLPS|SCES)[0-9]{5}$', re.IGNORECASE)
 LOADABLE = {'.shnext', '.json', '.shn', '.mc4', '.tlh'}
 
 
